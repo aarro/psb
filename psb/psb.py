@@ -29,14 +29,17 @@ IP_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" \
 
 def arp_ping(device):
     """use arping to check a specific device"""
-    arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
-    a_out = subprocess.check_output(arping, shell=True)
-    a_lines = a_out.splitlines(False)
-    for a_l in a_lines:
-        ping = a_l.split(" ")
-        if len(ping) > 3:
-            device.seen()
-            return True
+    try:
+        arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
+        a_out = subprocess.check_output(arping, shell=True)
+        a_lines = a_out.splitlines(False)
+        for a_l in a_lines:
+            ping = a_l.split(" ")
+            if len(ping) > 3:
+                device.seen()
+                return True
+    except Exception as e:
+        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
     return False
 
 def who_is_here(who):
@@ -76,7 +79,7 @@ def who_is_here(who):
             last_seen = "never"
             if o_addr in DEVICE_DICT:
                 last_seen = DEVICE_DICT[o_addr].Last.strftime("%Y-%m-%d %H:%M:%S")
-            print o_name + " is not here. Last seen " + last_seen
+            #print o_name + " is not here. Last seen " + last_seen
         sleep(10)
 
 # Main thread
