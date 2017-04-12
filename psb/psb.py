@@ -79,7 +79,7 @@ def who_is_here(who):
         if not o_online:
             last_seen = "never"
             if o_addr in DEVICE_DICT:
-                last_seen = DEVICE_DICT[o_addr].Last.strftime("%Y-%m-%d %H:%M:%S")
+                last_seen = DEVICE_DICT[o_addr].last_seen.strftime("%Y-%m-%d %H:%M:%S")
             print o_name + " is not here. Last seen " + last_seen
         sleep(10)
 
