@@ -69,7 +69,7 @@ def who_is_here(who):
                     else:
                         device.online = False
                         SLACK_CLIENT.api_call("chat.postMessage", channel=GROUP_ID,
-                                              text=d.name + " is gone", as_user=True)
+                                              text=device.name + " is gone", as_user=True)
             o_online = device.online
 
         if not o_online:
