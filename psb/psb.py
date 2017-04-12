@@ -52,19 +52,25 @@ def who_is_here(who):
                 else: # After 30 seconds check the mac/ip directly
                     found = False
                     arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
-                    a_out = subprocess.check_output(arping, shell=True)
-                    a_lines = a_out.splitlines(False)
-                    for a_l in a_lines:
-                        ping = a_l.split(" ")
-                        if len(ping) > 3:
-                            device.seen()
-                            found = True
-                    if found:
-                        print device.name + ' is here (arping)'
+                    process = subprocess.Popen(arping, stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, shell=True)
+                    a_out, err = process.communicate()
+                    if err:
+                        print err
                     else:
-                        device.online = False
-                        SLACK_CLIENT.api_call("chat.postMessage", channel=GROUP_ID,
-                                              text=device.name + " is gone", as_user=True)
+                        a_lines = a_out.splitlines(False)
+                        for a_l in a_lines:
+                            ping = a_l.split(" ")
+                            if len(ping) > 3:
+                                device.seen()
+                                found = True
+                                break
+                        if found:
+                            print device.name + ' is here (arping)'
+                        else:
+                            device.online = False
+                            SLACK_CLIENT.api_call("chat.postMessage", channel=GROUP_ID,
+                                                  text=device.name + " is gone", as_user=True)
             o_online = device.online
 
         if not o_online:
