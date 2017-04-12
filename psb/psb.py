@@ -30,8 +30,10 @@ IP_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" \
 def arp_ping(device):
     """use arping to check a specific device"""
     try:
+        print "Checking arping"
         arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
         a_out = subprocess.check_output(arping, shell=True)
+        print "arping succeeded"
         a_lines = a_out.splitlines(False)
         for a_l in a_lines:
             ping = a_l.split(" ")
@@ -52,7 +54,6 @@ def who_is_here(who):
 
     # Loop through checking for devices and counting if they're not present
     while True:
-        # Exits thread if Keyboard Interrupt occurs
         if STOP:
             print "Exiting Thread - " + o_name
             exit()
@@ -79,7 +80,7 @@ def who_is_here(who):
             last_seen = "never"
             if o_addr in DEVICE_DICT:
                 last_seen = DEVICE_DICT[o_addr].Last.strftime("%Y-%m-%d %H:%M:%S")
-            #print o_name + " is not here. Last seen " + last_seen
+            print o_name + " is not here. Last seen " + last_seen
         sleep(10)
 
 # Main thread
