@@ -27,23 +27,6 @@ MAC_REGEX = "[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$"
 IP_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" \
            r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
 
-def arp_ping(device):
-    """use arping to check a specific device"""
-    try:
-        print "Checking arping"
-        arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
-        a_out = subprocess.check_output(arping, shell=True)
-        print "arping succeeded"
-        a_lines = a_out.splitlines(False)
-        for a_l in a_lines:
-            ping = a_l.split(" ")
-            if len(ping) > 3:
-                device.seen()
-                return True
-    except Exception as e:
-        print "Error '{0}' occured. Arguments {1}.".format(e.message, e.args)
-    return False
-
 def who_is_here(who):
     """Function that checks for device presence"""
     sleep(45) #sleep at init
@@ -67,7 +50,15 @@ def who_is_here(who):
                 if device.is_active(30): # 30 second grace period for not seeing a device
                     print device.name + ' is here (arp-scan)'
                 else: # After 30 seconds check the mac/ip directly
-                    found = arp_ping(device)
+                    found = False
+                    arping = "sudo arping -c 3 -t " + device.mac + " " + device.ipv4
+                    a_out = subprocess.check_output(arping, shell=True)
+                    a_lines = a_out.splitlines(False)
+                    for a_l in a_lines:
+                        ping = a_l.split(" ")
+                        if len(ping) > 3:
+                            device.seen()
+                            found = True
                     if found:
                         print device.name + ' is here (arping)'
                     else:
