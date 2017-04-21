@@ -19,4 +19,9 @@ setup(name='psb',
           'python-dotenv',
           'slackclient'
       ],
+      entry_points={
+          'console_scripts': [
+              'psb=psb.__main__:main'
+          ]
+      },
       zip_safe=False)
