@@ -6,9 +6,11 @@ import os
 import platform
 import re
 import subprocess
+from multiprocessing import Pool
 from time import sleep
 from slackclient import SlackClient
-from .classes import Device
+from .device import Device
+from .utils import arping
 
 MAC_REGEX = "[0-9a-f]{2}([-:])[0-9a-f]{2}(\\1[0-9a-f]{2}){4}$"
 IP_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" \
@@ -24,6 +26,7 @@ class PSBot(object):
         self.slack_token = os.environ.get("SLACK_TOKEN")
         self.group_id = os.environ.get("SLACK_GROUP")
         self.slack_client = SlackClient(self.slack_token)
+        self.pool = Pool(processes=4)
         # load whitelist
         with open('devices.json') as data_file:
             self._data = json.load(data_file)
@@ -60,15 +63,28 @@ class PSBot(object):
         """loops through all devices to check active state and notify accordingly"""
         for key in self.devices:
             dev = self.devices[key]
-            if dev.is_active(300): #active in the last 5min
-                pass
+            message = ""
+            if dev.is_active(10): #active in the last 10sec
+                message = dev.get_status_message()
             else:
-                pass
-                # do this on a new thread? new process?
-                # arping = "sudo arping -c 3 -t " + dev.mac + " " + dev.ipv4
+                status = dev.get_status()
+                if status == "Online": #device thinks it's online but we didn't see it. Let's arping
+                    dev.running_arping = True
+                    self.pool.apply_async(arping, (dev.mac, dev.ipv4), callback=self._arping_cb)
+                if status == "Offline":
+                    message = dev.get_status_message()
 
-            message = dev.get_status_message()
             self._call_slack(message)
+
+    def _arping_cb(self, arg):
+        """arping callback"""
+        dev = self.devices[arg[0]]
+        print "arping callback for " + dev.name + " was " + str(arg[1])
+        dev.running_arping = False
+        if arg[1]:
+            pass # this will be picked up on the next regular arp scan
+        else:
+            dev.unseen() # definitely gone if arping failed.
 
     def _run_arp(self):
         """run arp scan based on os"""
