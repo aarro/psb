@@ -82,7 +82,7 @@ class PSBot(object):
         print "arping callback for " + dev.name + " was " + str(arg[1])
         dev.running_arping = False
         if arg[1]:
-            pass # this will be picked up on the next regular arp scan
+            dev.seen()
         else:
             dev.unseen() # definitely gone if arping failed.
 
